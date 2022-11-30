@@ -3,6 +3,9 @@ import os
 import shutil
 
 ## CONFIG
+WINDOW_WIDTH = 400
+WINDOW_HEIGHT = 600
+
 PROGRAM_DESC = "Configure then press the button to copy specific files\n" \
                "from one directory (Source) to another directory (Destination).\n" \
                "It copies from source directory and its sub-directories"
@@ -12,13 +15,49 @@ DST_LABEL = "Destination directory"
 FLT_LABEL = "File type(s) to be copied (ex: .py; .xls; .c; .txt)"
 FLN_LABEL = "File name(s) to be copied (starting letter or words of file name)"
 
-MAIN_BG = '#2C394B'
+MAIN_BG = "#2C394B"
 SECOND_BG = "white"
-BTN_COLOR = '#FF4C29'
+BTN_COLOR = "#FF4C29"
+BTN_HOVER = "#3E6D9C"
 BTN_FONT = "#FFFFFF"
 MAIN_FONT = "#FFFFFF"
 GREY = "#999999"
 BLACK = "#000000"
+
+
+# to move the window
+def window_click(event):
+    window_x, window_y = window.winfo_x(), window.winfo_y()
+    mouse_x, mouse_y = window.winfo_pointerx(), window.winfo_pointery()
+
+    window_click.offset_x = mouse_x - window_x
+    window_click.offset_y = mouse_y - window_y
+
+
+def move_window(event):
+    mouse_x, mouse_y= window.winfo_pointerx(), window.winfo_pointery()
+
+    x = mouse_x - window_click.offset_x
+    y = mouse_y - window_click.offset_y
+    window.geometry(f'+{x}+{y}')
+
+
+# close button
+def close_button_enter(event):
+   close_button.config(fg=BTN_COLOR)
+
+
+def close_button_leave(event):
+   close_button.config(fg=GREY)
+
+
+# copy files button
+def button_enter(event):
+   button.config(bg=BTN_HOVER)
+
+
+def button_leave(event):
+   button.config(bg=BTN_COLOR)
 
 
 # clear text box when click to prepare for character input
@@ -112,10 +151,7 @@ def preparecopy():
     output_text.config(state=tk.NORMAL)
     output_text.delete(1.0, tk.END)
 
-    output_text.insert(tk.END, "File type(s): " + str(fil_typ) + "\n")
-    output_text.insert(tk.END, "Start of file name(s): " + str(fil_nam) + "\n")
-
-    output_text.insert(tk.END, "\nChecking directories...\n\n")
+    output_text.insert(tk.END, "\n##### Checking directories... \n\n")
     error_flag = 0
     if not os.path.isdir(src_dir):
         output_text.insert(tk.END, "ERROR! Source directory invalid\n")
@@ -142,6 +178,7 @@ def preparecopy():
     output_text.insert(tk.END, "File name(s): " + str(fil_nam) + "\n\n")
 
     if error_flag == 0:
+        output_text.insert(tk.END, "\n##### Copying files... \n\n")
         copyfiles(src_dir, dst_dir, fil_typ, fil_nam)
     else:
         output_text.insert(tk.END, "\nSomething is wrong, I can't go on\n")
@@ -152,14 +189,35 @@ def preparecopy():
 ########## WINDOW ##########
 # initialize window
 window = tk.Tk()
-window.title("x2x:copy")
-window.geometry("450x600")
+window.title(PROGRAM_TITLE)
 window.minsize(450, 600)
 window.configure(bg=MAIN_BG)
+window.overrideredirect(True)
+window.attributes('-toolwindow', True)
+
+# position of window after opening
+##### get screen width and height
+screen_width = window.winfo_screenwidth()     # width of the screen
+screen_height = window.winfo_screenheight()   # height of the screen
+##### calculate x and y coordinates for the Tk root window
+win_pos_x = int((screen_width/2) - (WINDOW_WIDTH/2))
+win_pos_y = int((screen_height/2) - (WINDOW_HEIGHT/2))
+window.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{win_pos_x}+{win_pos_y}")
+
+# create a title bar
+title_bar = tk.Frame(window, bg=MAIN_BG, relief=tk.FLAT, bd=2)
+# close button
+close_button = tk.Button(title_bar, text="X", font=("Consolas", 18), bd=0, bg=MAIN_BG, fg=GREY, width=3, height=1,
+                         relief=tk.FLAT, activebackground=MAIN_BG, activeforeground=BTN_COLOR,
+                         highlightcolor=BTN_COLOR, command=window.destroy)
+title_bar.pack(expand=1, fill=tk.X)
+close_button.pack(padx=0, pady=0, side=tk.RIGHT)
+close_button.bind('<Enter>', close_button_enter)
+close_button.bind('<Leave>', close_button_leave)
 
 # description
 label_program = tk.Label(window, text=PROGRAM_TITLE, bg=MAIN_BG, fg=MAIN_FONT, font=("Arial", 18, "bold"))
-label_program.pack(padx=5, pady=20)
+label_program.pack(padx=5, pady=5)
 label_program = tk.Label(window, text=PROGRAM_DESC, bg=MAIN_BG, fg=MAIN_FONT, font=("Arial", 11))
 label_program.pack(padx=5, pady=5)
 
@@ -193,13 +251,22 @@ entry_fln.bind("<FocusOut>", reset_entry_fln)
 
 # execute button
 button = tk.Button(window, text="COPY FILES", bd=0, bg=BTN_COLOR, fg=BTN_FONT, width=15, height=2, relief=tk.FLAT,
-                   font=("Arial", 12), activebackground=GREY, activeforeground=BLACK, command=preparecopy)
+                   font=("Arial", 12), activebackground=GREY, activeforeground="#555", command=preparecopy)
 button.pack(padx=10, pady=20)
+button.bind('<Enter>', button_enter)
+button.bind('<Leave>', button_leave)
 
 # output
 output_text = tk.Text(window, bg="#334756", fg=BTN_FONT, width=100, height=150, relief=tk.FLAT, font=('Arial', 8))
 output_text.pack(padx=20, pady=20)
 output_text.config(state=tk.DISABLED)
+
+# to move the window
+title_bar.bind('<B1-Motion>', move_window)
+title_bar.bind('<Button-1>', window_click)
+
+#window.lift()                       #to start window it top level
+window.attributes('-topmost', 1)    #to keep window in top level
 
 # show window
 window.mainloop()
