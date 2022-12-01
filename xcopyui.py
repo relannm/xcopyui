@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import filedialog
 import os
 import shutil
 
@@ -19,10 +20,32 @@ MAIN_BG = "#2C394B"
 SECOND_BG = "white"
 BTN_COLOR = "#FF4C29"
 BTN_HOVER = "#3E6D9C"
-BTN_FONT = "#FFFFFF"
-MAIN_FONT = "#FFFFFF"
+BTN_FONT = MAIN_FONT = WHITE = "#FFFFFF"
 GREY = "#999999"
 BLACK = "#000000"
+
+
+# to search for directory
+def search_dir(target):
+    current_dir = os.getcwd()
+    tempdir = filedialog.askdirectory(parent=window, initialdir=current_dir, title=f'Please Select {target} Directory')
+    return tempdir
+
+
+def search_src_dir():
+    src_dir = search_dir("Source")
+    if len(src_dir) > 0:
+        entry_src.delete(0, tk.END)
+        entry_src.insert(0, src_dir)
+        entry_src.configure(fg=BLACK)
+
+
+def search_dst_dir():
+    dst_dir = search_dir("Destination")
+    if len(dst_dir) > 0:
+        entry_dst.delete(0, tk.END)
+        entry_dst.insert(0, dst_dir)
+        entry_dst.configure(fg=BLACK)
 
 
 # to move the window
@@ -57,6 +80,15 @@ def button_enter(event):
 
 
 def button_leave(event):
+   button.config(bg=BTN_COLOR)
+
+
+#directories button
+def button_dir_enter(event):
+   button.config(bg=BTN_HOVER)
+
+
+def button_dir_leave(event):
    button.config(bg=BTN_COLOR)
 
 
@@ -221,19 +253,34 @@ label_program.pack(padx=5, pady=5)
 label_program = tk.Label(window, text=PROGRAM_DESC, bg=MAIN_BG, fg=MAIN_FONT, font=("Arial", 11))
 label_program.pack(padx=5, pady=5)
 
+## DIRECTORIES
+dirframe = tk.Frame(window, bg=MAIN_BG, bd=0)
+dirframe.columnconfigure(0, weight=1)
+
 # source
-entry_src = tk.Entry(window, width=70, bd=5, fg=GREY, relief=tk.FLAT, font=("Arial", 9))
+entry_src = tk.Entry(dirframe, width=70, bd=5, fg=GREY, relief=tk.FLAT, font=("Arial", 9))
 entry_src.insert(0, SRC_LABEL)
-entry_src.pack(padx=20, pady=10)
+entry_src.grid(row=0, column=0, sticky=tk.W+tk.E, pady=10)
+
+button_src = tk.Button(dirframe, text="...", bg=WHITE, width=2, bd=3, relief=tk.FLAT, font=("Arial", 8),
+                       activebackground=WHITE, activeforeground=WHITE, command=search_src_dir)
+button_src.grid(row=0, column=1, sticky=tk.W+tk.E, pady=5)
+
 entry_src.bind("<FocusIn>", clear_entry_src)
 entry_src.bind("<FocusOut>", reset_entry_src)
 
 # destination
-entry_dst = tk.Entry(window, width=70, bd=5, fg=GREY, relief=tk.FLAT, font=("Arial", 9))
+entry_dst = tk.Entry(dirframe, width=70, bd=5, fg=GREY, relief=tk.FLAT, font=("Arial", 9))
 entry_dst.insert(0, DST_LABEL)
-entry_dst.pack(padx=20, pady=10)
+entry_dst.grid(row=1, column=0, sticky=tk.W+tk.E, pady=10)
 entry_dst.bind("<FocusIn>", clear_entry_dst)
 entry_dst.bind("<FocusOut>", reset_entry_dst)
+
+button_dst = tk.Button(dirframe, text="...", bg="#FFFFFF", width=2, bd=3, relief=tk.FLAT, font=("Arial", 8),
+                       activebackground=WHITE, activeforeground=WHITE, command=search_dst_dir)
+button_dst.grid(row=1, column=1, sticky=tk.W+tk.E, pady=5)
+
+dirframe.pack(padx=20, pady=0, fill="both", expand=True)
 
 # file type
 entry_flt = tk.Entry(window, width=70, bd=5, fg=GREY, relief=tk.FLAT, font=("Arial", 9))
